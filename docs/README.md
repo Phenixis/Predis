@@ -54,6 +54,13 @@ This documentation is designed to help both human developers and AI models build
    - Rate limits
    - Authentication flow
 
+7. **[DEVELOPMENT_ROADMAP.md](./DEVELOPMENT_ROADMAP.md)**
+   - Phase-by-phase development plan
+   - Task breakdowns with estimates
+   - Success metrics and milestones
+   - Risk management
+   - Timeline from setup to launch
+
 ## 🚀 Quick Start for AI Models
 
 If you're an AI model tasked with building features for Predis, follow this workflow:
@@ -310,18 +317,21 @@ When debugging or asking questions:
 
 ## 🗺️ Roadmap
 
-### Phase 1: MVP (Current)
+**Detailed roadmap**: See [DEVELOPMENT_ROADMAP.md](./DEVELOPMENT_ROADMAP.md) for complete phase-by-phase plan.
+
+### Phase 1: MVP (~10 weeks)
 - Core prediction & betting features
-- Basic social features
+- User authentication and profiles
+- Basic social features (friends)
 - Web + mobile apps
 
-### Phase 2: Enhancement
+### Phase 2: Enhancement (~4 weeks)
 - Advanced analytics
 - Achievements system
 - Groups/communities
 - Comments on predictions
 
-### Phase 3: Scale
+### Phase 3: Scale (Ongoing)
 - Real-time updates (WebSockets)
 - Advanced search & filters
 - Content moderation tools
