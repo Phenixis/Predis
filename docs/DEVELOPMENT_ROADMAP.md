@@ -15,32 +15,32 @@ This roadmap outlines the development phases for Predis, from initial setup to p
 #### 0.1 Repository & Environment Setup
 - [x] Create GitHub repository
 - [x] Write comprehensive documentation
-- [ ] Create `.env.example` file with all required variables
-- [ ] Set up `.gitignore` for Next.js, Node.js, and Capacitor
-- [ ] Configure ESLint and Prettier
-- [ ] Set up VSCode workspace settings
+- [x] Create `.env.example` file with all required variables
+- [x] Set up `.gitignore` for Next.js, Node.js, and Capacitor
+- [x] Configure ESLint and Prettier
+- [x] Set up VSCode workspace settings
 
 #### 0.2 Next.js Project Initialization
-- [ ] Initialize Next.js 14+ project with TypeScript
-- [ ] Configure `next.config.js` for mobile optimization
-- [ ] Set up Tailwind CSS
-- [ ] Configure App Router structure
-- [ ] Set up path aliases (`@/components`, `@/lib`, etc.)
+- [x] Initialize Next.js 14+ project with TypeScript
+- [x] Configure `next.config.js` for mobile optimization
+- [x] Set up Tailwind CSS
+- [x] Configure App Router structure
+- [x] Set up path aliases (`@/components`, `@/lib`, etc.)
 
 #### 0.3 Database Setup
 - [ ] Create PostgreSQL database (Neon or Supabase)
-- [ ] Initialize Prisma
-- [ ] Implement complete schema from `DATABASE_SCHEMA.md`
-- [ ] Create initial migration
-- [ ] Write seed script with test data
-- [ ] Test database connection
+- [x] Initialize Prisma
+- [x] Implement complete schema from `DATABASE_SCHEMA.md`
+- [ ] Create initial migration (pending database setup)
+- [x] Write seed script with test data
+- [ ] Test database connection (pending database setup)
 
 #### 0.4 Infrastructure Setup
-- [ ] Set up Redis instance (Upstash)
-- [ ] Configure Vercel project
-- [ ] Set up environment variables in Vercel
-- [ ] Configure CI/CD pipeline (GitHub Actions)
-- [ ] Set up error tracking (Sentry)
+- [ ] Set up Redis instance (Upstash) - Optional for now
+- [ ] Configure Vercel project - Ready when needed
+- [ ] Set up environment variables in Vercel - Ready when needed
+- [ ] Configure CI/CD pipeline (GitHub Actions) - Ready when needed
+- [ ] Set up error tracking (Sentry) - Ready when needed
 
 **Deliverables**: 
 - Working Next.js app with database connection
@@ -879,11 +879,11 @@ For solo development with AI assistance:
 ### Immediate Actions (Today)
 
 1. ✅ Review all documentation
-2. ⬜ Set up GitHub repository structure
-3. ⬜ Initialize Next.js project
-4. ⬜ Set up database (Neon/Supabase account)
-5. ⬜ Create initial Prisma schema
-6. ⬜ Run first migration
+2. ✅ Set up GitHub repository structure
+3. ✅ Initialize Next.js project
+4. ⬜ Set up database (Neon/Supabase account) - **NEXT STEP**
+5. ✅ Create initial Prisma schema
+6. ⬜ Run first migration (after database setup)
 
 ### This Week
 

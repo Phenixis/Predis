@@ -1,0 +1,341 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String
+  displayName   String?
+  avatar        String?
+  bio           String?   @db.Text
+  
+  // Gamification
+  coinBalance   Int       @default(1000)
+  level         Int       @default(1)
+  experience    Int       @default(0)
+  
+  // Stats (denormalized for performance)
+  totalPredictions  Int   @default(0)
+  totalBets         Int   @default(0)
+  totalWins         Int   @default(0)
+  totalLosses       Int   @default(0)
+  winRate           Float @default(0)
+  
+  // Preferences
+  pushNotifications Boolean @default(true)
+  emailNotifications Boolean @default(true)
+  privateProfile    Boolean @default(false)
+  
+  // Metadata
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  deletedAt     DateTime?
+  
+  // Relations
+  predictions           Prediction[]
+  bets                  Bet[]
+  transactions          Transaction[]
+  notificationsSent     Notification[] @relation("NotificationSender")
+  notificationsReceived Notification[] @relation("NotificationReceiver")
+  friendshipsInitiated  Friendship[] @relation("FriendshipInitiator")
+  friendshipsReceived   Friendship[] @relation("FriendshipReceiver")
+  participantIn         PredictionParticipant[]
+  
+  @@index([username])
+  @@index([email])
+  @@index([coinBalance])
+  @@index([createdAt])
+}
+
+// ============================================
+// PREDICTIONS
+// ============================================
+
+model Prediction {
+  id              String   @id @default(cuid())
+  creatorId       String
+  creator         User     @relation(fields: [creatorId], references: [id])
+  
+  // Content
+  question        String   @db.Text
+  description     String?  @db.Text
+  category        String?
+  tags            String[]
+  imageUrl        String?
+  
+  // Timing
+  endDate         DateTime
+  resolvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Status
+  status          PredictionStatus @default(ACTIVE)
+  correctOptionId String?
+  
+  // Visibility
+  visibility      Visibility @default(FRIENDS)
+  
+  // Metadata
+  totalPool       Int      @default(0)
+  totalBets       Int      @default(0)
+  viewCount       Int      @default(0)
+  
+  // Creator reward
+  creatorReward   Int      @default(0)
+  
+  // Relations
+  options         PredictionOption[]
+  bets            Bet[]
+  participants    PredictionParticipant[]
+  
+  @@index([creatorId])
+  @@index([status])
+  @@index([endDate])
+  @@index([createdAt])
+  @@index([visibility])
+  @@index([category])
+}
+
+enum PredictionStatus {
+  DRAFT
+  ACTIVE
+  LOCKED
+  RESOLVED
+  CANCELLED
+  DISPUTED
+}
+
+enum Visibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+  UNLISTED
+}
+
+// ============================================
+// PREDICTION OPTIONS
+// ============================================
+
+model PredictionOption {
+  id           String     @id @default(cuid())
+  predictionId String
+  prediction   Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  
+  // Content
+  text         String
+  order        Int
+  
+  // Betting stats
+  totalBets    Int        @default(0)
+  totalCoins   Int        @default(0)
+  
+  // Calculated odds (cached)
+  currentOdds  Float      @default(1.0)
+  
+  // Relations
+  bets         Bet[]
+  
+  @@unique([predictionId, order])
+  @@index([predictionId])
+}
+
+// ============================================
+// PARTICIPANTS
+// ============================================
+
+model PredictionParticipant {
+  id           String     @id @default(cuid())
+  predictionId String
+  prediction   Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  
+  invitedAt    DateTime   @default(now())
+  role         ParticipantRole @default(BETTOR)
+  
+  @@unique([predictionId, userId])
+  @@index([userId])
+}
+
+enum ParticipantRole {
+  BETTOR
+  VIEWER
+  MODERATOR
+}
+
+// ============================================
+// BETS
+// ============================================
+
+model Bet {
+  id         String     @id @default(cuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id])
+  
+  predictionId String
+  prediction   Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  
+  optionId   String
+  option     PredictionOption @relation(fields: [optionId], references: [id])
+  
+  // Bet details
+  amount     Int
+  oddsAtBet  Float
+  
+  // Resolution
+  status     BetStatus  @default(PENDING)
+  payout     Int        @default(0)
+  
+  // Metadata
+  placedAt   DateTime   @default(now())
+  resolvedAt DateTime?
+  
+  // Relations
+  transaction Transaction?
+  
+  @@index([userId])
+  @@index([predictionId])
+  @@index([status])
+  @@index([placedAt])
+}
+
+enum BetStatus {
+  PENDING
+  WON
+  LOST
+  REFUNDED
+}
+
+// ============================================
+// TRANSACTIONS
+// ============================================
+
+model Transaction {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  
+  type        TransactionType
+  amount      Int
+  balanceBefore Int
+  balanceAfter  Int
+  
+  // References
+  betId       String?         @unique
+  bet         Bet?            @relation(fields: [betId], references: [id])
+  
+  description String?
+  metadata    Json?
+  
+  createdAt   DateTime        @default(now())
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum TransactionType {
+  INITIAL_BALANCE
+  BET_PLACED
+  BET_WON
+  BET_REFUNDED
+  DAILY_BONUS
+  ACHIEVEMENT
+  CREATOR_REWARD
+  ADMIN_ADJUSTMENT
+}
+
+// ============================================
+// FRIENDSHIPS
+// ============================================
+
+model Friendship {
+  id          String   @id @default(cuid())
+  
+  initiatorId String
+  initiator   User     @relation("FriendshipInitiator", fields: [initiatorId], references: [id])
+  
+  receiverId  String
+  receiver    User     @relation("FriendshipReceiver", fields: [receiverId], references: [id])
+  
+  status      FriendshipStatus @default(PENDING)
+  
+  createdAt   DateTime @default(now())
+  acceptedAt  DateTime?
+  
+  @@unique([initiatorId, receiverId])
+  @@index([initiatorId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+  REJECTED
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id         String   @id @default(cuid())
+  
+  recipientId String
+  recipient   User    @relation("NotificationReceiver", fields: [recipientId], references: [id])
+  
+  senderId    String?
+  sender      User?   @relation("NotificationSender", fields: [senderId], references: [id])
+  
+  type        NotificationType
+  title       String
+  message     String  @db.Text
+  
+  // Links
+  actionUrl   String?
+  imageUrl    String?
+  
+  // Metadata
+  read        Boolean @default(false)
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+  
+  // Additional data
+  metadata    Json?
+  
+  @@index([recipientId, read])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  PREDICTION_CREATED
+  PREDICTION_ENDING
+  PREDICTION_ENDED
+  PREDICTION_RESOLVED
+  BET_WON
+  BET_LOST
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  ACHIEVEMENT_UNLOCKED
+  DAILY_BONUS
+  COMMENT_RECEIVED
+  MENTION
+}
